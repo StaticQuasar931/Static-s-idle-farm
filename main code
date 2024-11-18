@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idle Farm Simulator</title>
     <style>
+        /* Basic Styling */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -12,6 +13,7 @@
             color: #000;
             margin: 0;
             padding: 0;
+            transition: background 0.5s;
         }
         h1 {
             margin-top: 20px;
@@ -27,7 +29,7 @@
         .section {
             margin: 20px 0;
         }
-        .crop, .animal, .upgrade, .quest, .achievement {
+        .crop, .animal, .upgrade, .quest, .achievement, .decoration, .passive-farm {
             margin: 15px;
             padding: 20px;
             border: 3px solid #4CAF50;
@@ -40,7 +42,7 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
         }
-        .crop:hover, .animal:hover, .upgrade:hover, .quest:hover, .achievement:hover {
+        .crop:hover, .animal:hover, .upgrade:hover, .quest:hover, .achievement:hover, .decoration:hover, .passive-farm:hover {
             background-color: #f0f0f0;
             transform: scale(1.05);
         }
@@ -92,7 +94,25 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        /* Upgrade Descriptions */
+        /* Upgrades Section */
+        #upgrades-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        /* Decorations Section */
+        #decorations-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        /* Passive Farms Section */
+        #passive-farms-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        /* Tooltips */
         .tooltip {
             position: relative;
             display: inline-block;
@@ -131,13 +151,78 @@
             background-color: #4CAF50;
             transition: width 1s linear;
         }
+        /* Focus Mode */
+        #focus-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #focus-mode-toggle:hover {
+            background-color: #45a049;
+        }
+        /* Theme Toggle */
+        #theme-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #theme-toggle:hover {
+            background-color: #45a049;
+        }
         /* Responsive Design */
         @media (max-width: 768px) {
-            .crop, .animal, .upgrade, .quest, .achievement {
+            .crop, .animal, .upgrade, .quest, .achievement, .decoration, .passive-farm {
                 width: 80%;
                 margin: 10px auto;
                 display: block;
             }
+        }
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: linear-gradient(to bottom, #2c3e50, #4ca1af);
+            color: #fff;
+        }
+        body.dark-mode .farm {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+        }
+        body.dark-mode .crop, 
+        body.dark-mode .animal, 
+        body.dark-mode .upgrade, 
+        body.dark-mode .quest, 
+        body.dark-mode .achievement, 
+        body.dark-mode .decoration, 
+        body.dark-mode .passive-farm {
+            background-color: #34495e;
+            border-color: #1abc9c;
+            color: #ecf0f1;
+        }
+        body.dark-mode .tooltip .tooltiptext {
+            background-color: #333;
+        }
+        body.dark-mode .progress-bar {
+            background-color: #555;
+        }
+        body.dark-mode .progress-bar-inner {
+            background-color: #1abc9c;
+        }
+        body.dark-mode #focus-mode-toggle, 
+        body.dark-mode #theme-toggle {
+            background-color: #1abc9c;
         }
     </style>
 </head>
@@ -146,7 +231,7 @@
     <p>Made by <a href="https://sites.google.com/view/staticquasar931" style="color: #ff8800">Static</a></p>
     
     <div class="farm">
-        <!-- Coins and Gems Display -->
+        <!-- Currencies Display -->
         <div class="section">
             <p>Coins: <span id="coins">0</span> 💰 | Gems: <span id="gems">0</span> 💎</p>
         </div>
@@ -300,11 +385,55 @@
                     <p>(1000 coins)</p>
                     <span class="tooltiptext">Reduces sheep and goat production times by 5s.</span>
                 </div>
-                <!-- Additional Upgrades -->
                 <div class="upgrade tooltip" onclick="buyMarket()">
                     <h3>Buy Market</h3>
                     <p>(2000 coins)</p>
                     <span class="tooltiptext">Increases coin rewards by 10%.</span>
+                </div>
+                <!-- Upgrade Tiers -->
+                <div class="upgrade tooltip" onclick="buyAdvancedTractor()">
+                    <h3>Advanced Tractor</h3>
+                    <p>(5000 coins)</p>
+                    <span class="tooltiptext">Further reduces corn and cow production times by 3s.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buySuperWindmill()">
+                    <h3>Super Windmill</h3>
+                    <p>(8000 coins)</p>
+                    <span class="tooltiptext">Further reduces sheep and goat production times by 5s.</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Passive Farms Section -->
+        <div class="section">
+            <h2>Passive Farms 🌾</h2>
+            <div id="passive-farms-container">
+                <div class="passive-farm" id="passiveCrop1" onclick="buyPassiveCrop('passiveCrop1', 500)">
+                    <h3>Passive Wheat Farm</h3>
+                    <p>Cost: 500 coins</p>
+                    <p>Generates 5 coins every 10s</p>
+                </div>
+                <div class="passive-farm" id="passiveAnimal1" onclick="buyPassiveAnimal('passiveAnimal1', 1000)">
+                    <h3>Passive Chicken Coop</h3>
+                    <p>Cost: 1000 coins</p>
+                    <p>Generates 15 coins every 20s</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Decorations Section -->
+        <div class="section">
+            <h2>Decorations 🎨</h2>
+            <div id="decorations-container">
+                <div class="decoration tooltip" onclick="buyDecoration('statue', 300)">
+                    <h3>Statue</h3>
+                    <p>(300 coins)</p>
+                    <span class="tooltiptext">Beautify your farm. No gameplay effect.</span>
+                </div>
+                <div class="decoration tooltip" onclick="buyDecoration('fountain', 500)">
+                    <h3>Fountain</h3>
+                    <p>(500 coins)</p>
+                    <span class="tooltiptext">Adds a fountain to your farm. No gameplay effect.</span>
                 </div>
             </div>
         </div>
@@ -329,6 +458,8 @@
         <div class="section">
             <h2>Prestige ✨</h2>
             <button onclick="prestige()" style="padding: 10px 20px; font-size: 1em; cursor: pointer;">Reset for Prestige (1000 Coins)</button>
+            <p>Prestige Count: <span id="prestigeCount">0</span></p>
+            <p>Coin Multiplier: x<span id="coinMultiplier">1</span></p>
         </div>
     </div>
     
@@ -340,12 +471,20 @@
     <audio id="achievementSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
     <audio id="upgradeSound" src="https://www.soundjay.com/button/sounds/button-4.mp3" preload="auto"></audio>
     <audio id="prestigeSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-03.mp3" preload="auto"></audio>
+    <audio id="decorationSound" src="https://www.soundjay.com/button/sounds/button-10.mp3" preload="auto"></audio>
+    <audio id="passiveSound" src="https://www.soundjay.com/button/sounds/button-09.mp3" preload="auto"></audio>
+    <audio id="dailyBonusSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-07.mp3" preload="auto"></audio>
+    
+    <!-- Focus Mode and Theme Toggle Buttons -->
+    <button id="focus-mode-toggle" onclick="toggleFocusMode()">🔒 Focus Mode</button>
+    <button id="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
     
     <script>
         // Game Variables
         let coins = 0;
         let gems = 0;
         let growthTimers = {};
+        let passiveTimers = {};
         let growthTimes = {
             wheat: 5,
             corn: 8,
@@ -379,12 +518,18 @@
         let completedQuests = [];
         let prestigeCount = 0;
         let coinMultiplier = 1;
+        let focusMode = false;
+        let theme = 'light';
+        let dailyBonusClaimed = false;
         
         // Sound Effects
         const coinSound = document.getElementById('coinSound');
         const achievementSound = document.getElementById('achievementSound');
         const upgradeSound = document.getElementById('upgradeSound');
         const prestigeSound = document.getElementById('prestigeSound');
+        const decorationSound = document.getElementById('decorationSound');
+        const passiveSound = document.getElementById('passiveSound');
+        const dailyBonusSound = document.getElementById('dailyBonusSound');
         
         // Initialization
         window.onload = function() {
@@ -393,8 +538,12 @@
             generateAchievements();
             updateCoins();
             updateGems();
+            updatePrestige();
             renderQuests();
             renderAchievements();
+            checkDailyBonus();
+            startPassiveIncome();
+            updateTheme();
         };
         
         window.onbeforeunload = saveGame;
@@ -402,7 +551,6 @@
         // Grow Function
         function grow(item, reward) {
             if (!growthTimers[item]) {
-                if (coins < 0) return; // Prevent negative coins
                 let outline = document.getElementById(`${item}ButtonOutline`);
                 outline.style.display = 'block';
                 outline.style.animationDuration = `${growthTimes[item]}s`;
@@ -428,15 +576,65 @@
             }
         }
         
+        // Passive Income Functions
+        function buyPassiveCrop(id, cost) {
+            if (coins >= cost && !document.getElementById(id).classList.contains('owned')) {
+                coins -= cost;
+                document.getElementById(id).classList.add('owned');
+                passiveSound.play();
+                alertInGame('Passive Wheat Farm purchased! 💰 Generates 5 coins every 10s.');
+                startPassiveIncomeItem(id, 10, 5);
+                updateCoins();
+            } else {
+                alertInGame('Not enough coins or already owned!');
+            }
+        }
+        
+        function buyPassiveAnimal(id, cost) {
+            if (coins >= cost && !document.getElementById(id).classList.contains('owned')) {
+                coins -= cost;
+                document.getElementById(id).classList.add('owned');
+                passiveSound.play();
+                alertInGame('Passive Chicken Coop purchased! 💰 Generates 15 coins every 20s.');
+                startPassiveIncomeItem(id, 20, 15);
+                updateCoins();
+            } else {
+                alertInGame('Not enough coins or already owned!');
+            }
+        }
+        
+        function startPassiveIncomeItem(id, interval, amount) {
+            passiveTimers[id] = setInterval(() => {
+                coins += amount * coinMultiplier;
+                coinSound.play();
+                updateCoins();
+                alertInGame(`Passive income: +${amount * coinMultiplier} coins from ${capitalize(id.replace('passive', '').toLowerCase())}`);
+            }, interval * 1000);
+        }
+        
+        function startPassiveIncome() {
+            // Initialize existing passive farms
+            ['passiveCrop1', 'passiveAnimal1'].forEach(id => {
+                if (document.getElementById(id).classList.contains('owned')) {
+                    if (id === 'passiveCrop1') {
+                        startPassiveIncomeItem(id, 10, 5);
+                    }
+                    if (id === 'passiveAnimal1') {
+                        startPassiveIncomeItem(id, 20, 15);
+                    }
+                }
+            });
+        }
+        
         // Buy Upgrades
         function buyFertilizer() {
             if (coins >= 50) {
                 coins -= 50;
                 growthTimes.wheat = Math.max(1, growthTimes.wheat - 1);
                 growthTimes.chicken = Math.max(5, growthTimes.chicken - 1);
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Fertilizer purchased! 🌱 Wheat and Chicken growth times decreased by 1s.');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -447,9 +645,9 @@
                 coins -= 150;
                 growthTimes.corn = Math.max(4, growthTimes.corn - 2);
                 growthTimes.cow = Math.max(10, growthTimes.cow - 2);
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Tractor purchased! 🚜 Corn and Cow production times decreased by 2s.');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -459,9 +657,9 @@
             if (coins >= 300) {
                 coins -= 300;
                 // Implement barn functionality (e.g., increase animal capacity)
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Barn purchased! 🏠 You can now keep more animals!');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -471,9 +669,9 @@
             if (coins >= 500) {
                 coins -= 500;
                 growthTimes.pumpkin = Math.max(6, growthTimes.pumpkin - 3);
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Greenhouse purchased! 🌿 Pumpkin growth time decreased by 3s.');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -484,9 +682,9 @@
                 coins -= 800;
                 growthTimes.wheat = Math.max(1, growthTimes.wheat - 2);
                 growthTimes.corn = Math.max(2, growthTimes.corn - 2);
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Irrigation System purchased! 💦 Wheat and Corn growth times decreased by 2s.');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -497,9 +695,9 @@
                 coins -= 1000;
                 growthTimes.sheep = Math.max(10, growthTimes.sheep - 5);
                 growthTimes.goat = Math.max(10, growthTimes.goat - 5);
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Windmill purchased! 🌬️ Sheep and Goat production times decreased by 5s.');
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -509,9 +707,48 @@
             if (coins >= 2000) {
                 coins -= 2000;
                 coinMultiplier += 0.1; // Increase coin rewards by 10%
-                updateCoins();
                 upgradeSound.play();
                 alertInGame('Market purchased! 💼 Coin rewards increased by 10%.');
+                updateCoins();
+                checkAchievements('market');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyAdvancedTractor() {
+            if (coins >= 5000) {
+                coins -= 5000;
+                growthTimes.corn = Math.max(2, growthTimes.corn - 3);
+                growthTimes.cow = Math.max(7, growthTimes.cow - 3);
+                upgradeSound.play();
+                alertInGame('Advanced Tractor purchased! 🚜 Corn and Cow production times decreased by 3s.');
+                updateCoins();
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buySuperWindmill() {
+            if (coins >= 8000) {
+                coins -= 8000;
+                growthTimes.sheep = Math.max(5, growthTimes.sheep - 5);
+                growthTimes.goat = Math.max(5, growthTimes.goat - 5);
+                upgradeSound.play();
+                alertInGame('Super Windmill purchased! 🌬️ Sheep and Goat production times decreased by 5s.');
+                updateCoins();
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        // Buy Decorations
+        function buyDecoration(decoration, cost) {
+            if (coins >= cost) {
+                coins -= cost;
+                decorationSound.play();
+                alertInGame(`${capitalize(decoration)} decoration added to your farm! 🎉`);
+                updateCoins();
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -525,6 +762,12 @@
         // Update Gems Display
         function updateGems() {
             document.getElementById('gems').innerText = gems;
+        }
+        
+        // Update Prestige Display
+        function updatePrestige() {
+            document.getElementById('prestigeCount').innerText = prestigeCount;
+            document.getElementById('coinMultiplier').innerText = coinMultiplier;
         }
         
         // In-Game Notifications
@@ -563,7 +806,10 @@
                 prestigeCount,
                 coinMultiplier,
                 achievements,
-                completedQuests
+                completedQuests,
+                passiveFarms: getOwnedPassiveFarms(),
+                theme,
+                dailyBonusClaimed
             };
             localStorage.setItem('idleFarmGameState', JSON.stringify(gameState));
         }
@@ -579,8 +825,19 @@
                 coinMultiplier = savedState.coinMultiplier || 1;
                 achievements = savedState.achievements || {};
                 completedQuests = savedState.completedQuests || [];
+                theme = savedState.theme || 'light';
+                dailyBonusClaimed = savedState.dailyBonusClaimed || false;
+                
+                // Restore passive farms
+                if (savedState.passiveFarms) {
+                    savedState.passiveFarms.forEach(id => {
+                        document.getElementById(id).classList.add('owned');
+                    });
+                }
+                
                 updateCoins();
                 updateGems();
+                updatePrestige();
             }
         }
         
@@ -591,12 +848,60 @@
                 prestigeCount += 1;
                 coinMultiplier += 0.5; // Increase multiplier
                 updateCoins();
+                updatePrestige();
                 prestigeSound.play();
                 alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
-                saveGame();
+                // Reset game except for prestige and multiplier
+                resetGame(false);
             } else {
                 alertInGame('Not enough coins to prestige!');
             }
+        }
+        
+        // Reset Game Function
+        function resetGame(completeReset = true) {
+            // Clear growth timers
+            for (let key in growthTimers) {
+                clearTimeout(growthTimers[key]);
+            }
+            growthTimers = {};
+            
+            // Clear passive timers
+            for (let key in passiveTimers) {
+                clearInterval(passiveTimers[key]);
+            }
+            passiveTimers = {};
+            
+            // Reset variables
+            coins = 0;
+            gems = 0;
+            growthTimes = {
+                wheat: 5,
+                corn: 8,
+                pumpkin: 12,
+                tomato: 7,
+                carrot: 6,
+                chicken: 10,
+                cow: 15,
+                sheep: 20,
+                goat: 18,
+                duck: 12,
+                pig: 25
+            };
+            if (completeReset) {
+                achievements = {};
+                completedQuests = [];
+                coinMultiplier = 1;
+                document.querySelectorAll('.owned').forEach(el => el.classList.remove('owned'));
+            }
+            updateCoins();
+            updateGems();
+            updatePrestige();
+            renderQuests();
+            renderAchievements();
+            generateQuests();
+            generateAchievements();
+            startPassiveIncome();
         }
         
         // Achievements System
@@ -606,11 +911,13 @@
                 { id: 'ach2', description: 'Harvest 50 Corn', goal: 50, type: 'crop', item: 'corn' },
                 { id: 'ach3', description: 'Collect 1000 Coins', goal: 1000, type: 'coins', item: null },
                 { id: 'ach4', description: 'Raise 20 Chickens', goal: 20, type: 'animal', item: 'chicken' },
-                { id: 'ach5', description: 'Unlock Market Upgrade', goal: 'market', type: 'upgrade', item: 'market' }
+                { id: 'ach5', description: 'Unlock Market Upgrade', goal: 'market', type: 'upgrade', item: 'market' },
+                { id: 'ach6', description: 'Prestige 1 Time', goal: 1, type: 'prestige', item: null },
+                { id: 'ach7', description: 'Own 1 Passive Farm', goal: 1, type: 'passive', item: null }
             ];
             achievementList.forEach(ach => {
                 if (!achievements[ach.id]) {
-                    achievements[ach.id] = { ...ach, achieved: false };
+                    achievements[ach.id] = { ...ach, achieved: false, count: 0 };
                 }
             });
         }
@@ -620,7 +927,6 @@
                 let ach = achievements[key];
                 if (!ach.achieved) {
                     if (ach.type === 'crop' && ach.item === item) {
-                        if (!ach.count) ach.count = 0;
                         ach.count += 1;
                         if (ach.count >= ach.goal) {
                             ach.achieved = true;
@@ -630,7 +936,6 @@
                         }
                     }
                     if (ach.type === 'animal' && ach.item === item) {
-                        if (!ach.count) ach.count = 0;
                         ach.count += 1;
                         if (ach.count >= ach.goal) {
                             ach.achieved = true;
@@ -648,14 +953,27 @@
                         }
                     }
                     if (ach.type === 'upgrade' && ach.item === item) {
-                        if (ach.goal === 'market') {
-                            // Check if market is purchased
-                            if (coinMultiplier > 1) { // Assuming market increases multiplier
-                                ach.achieved = true;
-                                gems += 100;
-                                achievementSound.play();
-                                alertInGame(`Achievement Unlocked: ${ach.description} +100 Gems!`);
-                            }
+                        if (item === 'market' && coinMultiplier > 1) { // Assuming market increases multiplier
+                            ach.achieved = true;
+                            gems += 100;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +100 Gems!`);
+                        }
+                    }
+                    if (ach.type === 'prestige' && item === null) {
+                        if (prestigeCount >= ach.goal) {
+                            ach.achieved = true;
+                            gems += 150;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +150 Gems!`);
+                        }
+                    }
+                    if (ach.type === 'passive' && item === null) {
+                        if (getOwnedPassiveFarms().length >= ach.goal) {
+                            ach.achieved = true;
+                            gems += 200;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +200 Gems!`);
                         }
                     }
                 }
@@ -681,51 +999,69 @@
             const questList = [
                 { id: 'quest1', description: 'Harvest 20 Wheat', goal: 20, type: 'crop', item: 'wheat', reward: 100 },
                 { id: 'quest2', description: 'Collect 500 Coins', goal: 500, type: 'coins', item: null, reward: 50 },
-                { id: 'quest3', description: 'Buy 2 Upgrades', goal: 2, type: 'upgrade', item: null, reward: 150 }
+                { id: 'quest3', description: 'Buy 2 Upgrades', goal: 2, type: 'upgrade', item: null, reward: 150 },
+                { id: 'quest4', description: 'Raise 10 Chickens', goal: 10, type: 'animal', item: 'chicken', reward: 200 },
+                { id: 'quest5', description: 'Own 1 Passive Farm', goal: 1, type: 'passive', item: null, reward: 300 }
             ];
             quests = questList.filter(q => !completedQuests.includes(q.id));
         }
         
         function checkQuests(item) {
             quests.forEach(quest => {
-                if (!quest.completed) {
+                if (!completedQuests.includes(quest.id)) {
                     if (quest.type === 'crop' && quest.item === item) {
-                        if (!quest.count) quest.count = 0;
-                        quest.count += 1;
+                        quest.count = (quest.count || 0) + 1;
                         if (quest.count >= quest.goal) {
-                            quest.completed = true;
-                            coins += quest.reward;
-                            alertInGame(`Quest Completed: ${quest.description} +${quest.reward} coins!`);
-                            completedQuests.push(quest.id);
-                            generateQuests();
-                            renderQuests();
-                            updateCoins();
+                            completeQuest(quest);
                         }
                     }
-                    if (quest.type === 'coins') {
+                    if (quest.type === 'animal' && quest.item === item) {
+                        quest.count = (quest.count || 0) + 1;
+                        if (quest.count >= quest.goal) {
+                            completeQuest(quest);
+                        }
+                    }
+                    if (quest.type === 'coins' && quest.item === null) {
                         if (coins >= quest.goal) {
-                            quest.completed = true;
-                            coins += quest.reward;
-                            alertInGame(`Quest Completed: ${quest.description} +${quest.reward} coins!`);
-                            completedQuests.push(quest.id);
-                            generateQuests();
-                            renderQuests();
-                            updateCoins();
+                            completeQuest(quest);
                         }
                     }
-                    if (quest.type === 'upgrade') {
+                    if (quest.type === 'upgrade' && quest.item === null) {
                         // Assuming any upgrade counts
                         // Implement upgrade counting if necessary
+                        // For simplicity, count as completed once any upgrade is bought
+                        if (coins < quest.reward + 150) { // Example condition
+                            quest.count = (quest.count || 0) + 1;
+                            if (quest.count >= quest.goal) {
+                                completeQuest(quest);
+                            }
+                        }
+                    }
+                    if (quest.type === 'passive' && quest.item === null) {
+                        if (getOwnedPassiveFarms().length >= quest.goal) {
+                            completeQuest(quest);
+                        }
                     }
                 }
             });
+        }
+        
+        function completeQuest(quest) {
+            coins += quest.reward;
+            alertInGame(`Quest Completed: ${quest.description} +${quest.reward} coins!`);
+            completedQuests.push(quest.id);
+            quests = quests.filter(q => q.id !== quest.id);
+            generateQuests();
+            renderQuests();
+            updateCoins();
+            checkAchievements(quest.item);
         }
         
         function renderQuests() {
             const container = document.getElementById('quests-container');
             container.innerHTML = '';
             quests.forEach(quest => {
-                if (!quest.completed) {
+                if (!completedQuests.includes(quest.id)) {
                     let questDiv = document.createElement('div');
                     questDiv.classList.add('quest');
                     questDiv.innerHTML = `<h4>${quest.description}</h4><p>Reward: ${quest.reward} coins</p>`;
@@ -741,18 +1077,126 @@
                 prestigeCount += 1;
                 coinMultiplier += 0.5; // Increase multiplier
                 updateCoins();
+                updatePrestige();
                 prestigeSound.play();
                 alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
-                saveGame();
+                checkAchievements(null); // For prestige achievements
+                resetGame(true);
             } else {
                 alertInGame('Not enough coins to prestige!');
             }
         }
         
+        // Passive Farms Helper
+        function getOwnedPassiveFarms() {
+            let owned = [];
+            document.querySelectorAll('.passive-farm.owned').forEach(el => owned.push(el.id));
+            return owned;
+        }
+        
+        // Toggle Focus Mode
+        function toggleFocusMode() {
+            focusMode = !focusMode;
+            const farmSections = document.querySelectorAll('.section');
+            farmSections.forEach(section => {
+                if (!['Crops 🌱', 'Animals 🐄', 'Upgrades 🚜', 'Prestige ✨'].includes(section.querySelector('h2')?.innerText)) {
+                    section.style.display = focusMode ? 'none' : 'block';
+                }
+            });
+            document.getElementById('focus-mode-toggle').innerText = focusMode ? '🔓 Focus Mode' : '🔒 Focus Mode';
+        }
+        
+        // Toggle Theme
+        function toggleTheme() {
+            theme = (theme === 'light') ? 'dark' : 'light';
+            updateTheme();
+        }
+        
+        function updateTheme() {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            // Save theme preference
+            saveGame();
+        }
+        
+        // Daily Bonus System
+        function checkDailyBonus() {
+            const lastLogin = localStorage.getItem('lastLogin');
+            const today = new Date().toDateString();
+            if (lastLogin !== today && !dailyBonusClaimed) {
+                showDailyBonus();
+                localStorage.setItem('lastLogin', today);
+            }
+        }
+        
+        function showDailyBonus() {
+            gems += 5;
+            dailyBonusSound.play();
+            alertInGame('Daily Bonus! +5 Gems! 🌟');
+            dailyBonusClaimed = true;
+            updateGems();
+        }
+        
+        // Reset Daily Bonus
+        function resetDailyBonus() {
+            dailyBonusClaimed = false;
+        }
+        
+        // Automatically reset daily bonus at midnight
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                resetDailyBonus();
+            }
+        }, 60000); // Check every minute
+        
+        // Strategy Tips
+        function showStrategyTip() {
+            const tips = [
+                "Focus on upgrading wheat and chicken early to maximize your income.",
+                "Invest in passive farms to earn coins even when you're not actively playing.",
+                "Complete daily quests for additional rewards and progression.",
+                "Prestiging can significantly boost your coin earnings over time.",
+                "Balance your investments between crops and animals for steady income."
+            ];
+            const randomTip = tips[Math.floor(Math.random() * tips.length)];
+            alertInGame(`Strategy Tip: ${randomTip}`);
+        }
+        
+        // Periodically show strategy tips
+        setInterval(showStrategyTip, 300000); // Every 5 minutes
+        
         // Capitalize Function
         function capitalize(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
+        
+        // Accessibility: Keyboard Navigation
+        document.addEventListener('keydown', function(event) {
+            switch(event.key.toLowerCase()) {
+                case 'c':
+                    document.querySelector('.section:nth-of-type(2)').scrollIntoView();
+                    break;
+                case 'a':
+                    document.querySelector('.section:nth-of-type(3)').scrollIntoView();
+                    break;
+                case 'u':
+                    document.querySelector('.section:nth-of-type(4)').scrollIntoView();
+                    break;
+                case 'q':
+                    document.querySelector('.section:nth-of-type(6)').scrollIntoView();
+                    break;
+                case 'p':
+                    document.querySelector('.section:nth-of-type(7)').scrollIntoView();
+                    break;
+                default:
+                    break;
+            }
+        });
     </script>
 </body>
 </html>
+
