@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Farm Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom, #a1c4fd, #c2e9fb);
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 3em;
+        }
+        .farm {
+            margin: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .crop, .animal, .upgrade, .quest, .achievement {
+            margin: 15px;
+            padding: 20px;
+            border: 3px solid #4CAF50;
+            border-radius: 15px;
+            background-color: #fff;
+            display: inline-block;
+            width: 220px;
+            position: relative;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .crop:hover, .animal:hover, .upgrade:hover, .quest:hover, .achievement:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+        .emoji {
+            font-size: 3em;
+        }
+        .button-outline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 6px solid #4CAF50;
+            border-radius: 10px;
+            animation: buttonOutlineProgress linear;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: 1;
+            pointer-events: none;
+            transform-origin: left;
+        }
+        @keyframes buttonOutlineProgress {
+            0% {
+                transform: scaleX(0);
+            }
+            100% {
+                transform: scaleX(1);
+            }
+        }
+        /* Notification Container */
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        /* Achievements Section */
+        #achievements-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .achievement {
+            border: 2px solid #FFD700;
+            background-color: #FFFACD;
+        }
+        /* Quests Section */
+        #quests-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        /* Upgrade Descriptions */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: #555;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above */
+            left: 50%;
+            margin-left: -90px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar-inner {
+            height: 20px;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .crop, .animal, .upgrade, .quest, .achievement {
+                width: 80%;
+                margin: 10px auto;
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Idle Farm Simulator 🌾</h1>
+    <p>Made by <a href="https://sites.google.com/view/staticquasar931" style="color: #ff8800">Static</a></p>
+    
+    <div class="farm">
+        <!-- Coins and Gems Display -->
+        <div class="section">
+            <p>Coins: <span id="coins">0</span> 💰 | Gems: <span id="gems">0</span> 💎</p>
+        </div>
+        
+        <!-- Crops Section -->
+        <div class="section">
+            <h2>Crops 🌱</h2>
+            <div id="crops-container">
+                <div class="crop" id="wheat" onclick="grow('wheat', 10)">
+                    <div class="emoji">🌾</div>
+                    <h3>Wheat</h3>
+                    <p>Growth Time: <span id="wheatGrowth">5</span>s</p>
+                    <div id="wheatButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="wheatProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="crop" id="corn" onclick="grow('corn', 15)">
+                    <div class="emoji">🌽</div>
+                    <h3>Corn</h3>
+                    <p>Growth Time: <span id="cornGrowth">8</span>s</p>
+                    <div id="cornButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="cornProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="crop" id="pumpkin" onclick="grow('pumpkin', 25)">
+                    <div class="emoji">🎃</div>
+                    <h3>Pumpkin</h3>
+                    <p>Growth Time: <span id="pumpkinGrowth">12</span>s</p>
+                    <div id="pumpkinButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="pumpkinProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <!-- Additional Crops -->
+                <div class="crop" id="tomato" onclick="grow('tomato', 20)">
+                    <div class="emoji">🍅</div>
+                    <h3>Tomato</h3>
+                    <p>Growth Time: <span id="tomatoGrowth">7</span>s</p>
+                    <div id="tomatoButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="tomatoProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="crop" id="carrot" onclick="grow('carrot', 12)">
+                    <div class="emoji">🥕</div>
+                    <h3>Carrot</h3>
+                    <p>Growth Time: <span id="carrotGrowth">6</span>s</p>
+                    <div id="carrotButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="carrotProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Animals Section -->
+        <div class="section">
+            <h2>Animals 🐄</h2>
+            <div id="animals-container">
+                <div class="animal" id="chicken" onclick="grow('chicken', 20)">
+                    <div class="emoji">🐔</div>
+                    <h3>Chicken</h3>
+                    <p>Egg Time: <span id="chickenProduction">10</span>s</p>
+                    <div id="chickenButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="chickenProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="animal" id="cow" onclick="grow('cow', 30)">
+                    <div class="emoji">🐄</div>
+                    <h3>Cow</h3>
+                    <p>Milk Time: <span id="cowProduction">15</span>s</p>
+                    <div id="cowButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="cowProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="animal" id="sheep" onclick="grow('sheep', 40)">
+                    <div class="emoji">🐑</div>
+                    <h3>Sheep</h3>
+                    <p>Wool Time: <span id="sheepProduction">20</span>s</p>
+                    <div id="sheepButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="sheepProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="animal" id="goat" onclick="grow('goat', 50)">
+                    <div class="emoji">🐐</div>
+                    <h3>Goat</h3>
+                    <p>Milk Time: <span id="goatProduction">18</span>s</p>
+                    <div id="goatButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="goatProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <!-- Additional Animals -->
+                <div class="animal" id="duck" onclick="grow('duck', 25)">
+                    <div class="emoji">🦆</div>
+                    <h3>Duck</h3>
+                    <p>Egg Time: <span id="duckProduction">12</span>s</p>
+                    <div id="duckButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="duckProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <div class="animal" id="pig" onclick="grow('pig', 35)">
+                    <div class="emoji">🐖</div>
+                    <h3>Pig</h3>
+                    <p>Truffle Time: <span id="pigProduction">25</span>s</p>
+                    <div id="pigButtonOutline" class="button-outline" style="display: none;"></div>
+                    <div class="progress-bar">
+                        <div id="pigProgress" class="progress-bar-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upgrades Section -->
+        <div class="section">
+            <h2>Upgrades 🚜</h2>
+            <div id="upgrades-container">
+                <div class="upgrade tooltip" onclick="buyFertilizer()">
+                    <h3>Buy Fertilizer</h3>
+                    <p>(50 coins)</p>
+                    <span class="tooltiptext">Reduces wheat and chicken growth times by 1s.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buyTractor()">
+                    <h3>Buy Tractor</h3>
+                    <p>(150 coins)</p>
+                    <span class="tooltiptext">Reduces corn and cow production times by 2s.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buyBarn()">
+                    <h3>Buy Barn</h3>
+                    <p>(300 coins)</p>
+                    <span class="tooltiptext">Allows you to keep more animals.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buyGreenhouse()">
+                    <h3>Buy Greenhouse</h3>
+                    <p>(500 coins)</p>
+                    <span class="tooltiptext">Reduces pumpkin growth time by 3s.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buyIrrigation()">
+                    <h3>Buy Irrigation</h3>
+                    <p>(800 coins)</p>
+                    <span class="tooltiptext">Reduces wheat and corn growth times by 2s.</span>
+                </div>
+                <div class="upgrade tooltip" onclick="buyWindmill()">
+                    <h3>Buy Windmill</h3>
+                    <p>(1000 coins)</p>
+                    <span class="tooltiptext">Reduces sheep and goat production times by 5s.</span>
+                </div>
+                <!-- Additional Upgrades -->
+                <div class="upgrade tooltip" onclick="buyMarket()">
+                    <h3>Buy Market</h3>
+                    <p>(2000 coins)</p>
+                    <span class="tooltiptext">Increases coin rewards by 10%.</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quests Section -->
+        <div class="section">
+            <h2>Quests 🎯</h2>
+            <div id="quests-container">
+                <!-- Quests will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Achievements Section -->
+        <div class="section">
+            <h2>Achievements 🏆</h2>
+            <div id="achievements-container">
+                <!-- Achievements will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Prestige Section -->
+        <div class="section">
+            <h2>Prestige ✨</h2>
+            <button onclick="prestige()" style="padding: 10px 20px; font-size: 1em; cursor: pointer;">Reset for Prestige (1000 Coins)</button>
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Audio Elements -->
+    <audio id="coinSound" src="https://www.soundjay.com/button/sounds/button-16.mp3" preload="auto"></audio>
+    <audio id="achievementSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+    <audio id="upgradeSound" src="https://www.soundjay.com/button/sounds/button-4.mp3" preload="auto"></audio>
+    <audio id="prestigeSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-03.mp3" preload="auto"></audio>
+    
+    <script>
+        // Game Variables
+        let coins = 0;
+        let gems = 0;
+        let growthTimers = {};
+        let growthTimes = {
+            wheat: 5,
+            corn: 8,
+            pumpkin: 12,
+            tomato: 7,
+            carrot: 6,
+            chicken: 10,
+            cow: 15,
+            sheep: 20,
+            goat: 18,
+            duck: 12,
+            pig: 25
+        };
+        let baseRewards = {
+            wheat: 10,
+            corn: 15,
+            pumpkin: 25,
+            tomato: 20,
+            carrot: 12,
+            chicken: 20,
+            cow: 30,
+            sheep: 40,
+            goat: 50,
+            duck: 25,
+            pig: 35
+        };
+        let activeNotifications = 0;
+        const maxNotifications = 3;
+        let achievements = {};
+        let quests = [];
+        let completedQuests = [];
+        let prestigeCount = 0;
+        let coinMultiplier = 1;
+        
+        // Sound Effects
+        const coinSound = document.getElementById('coinSound');
+        const achievementSound = document.getElementById('achievementSound');
+        const upgradeSound = document.getElementById('upgradeSound');
+        const prestigeSound = document.getElementById('prestigeSound');
+        
+        // Initialization
+        window.onload = function() {
+            loadGame();
+            generateQuests();
+            generateAchievements();
+            updateCoins();
+            updateGems();
+            renderQuests();
+            renderAchievements();
+        };
+        
+        window.onbeforeunload = saveGame;
+        
+        // Grow Function
+        function grow(item, reward) {
+            if (!growthTimers[item]) {
+                if (coins < 0) return; // Prevent negative coins
+                let outline = document.getElementById(`${item}ButtonOutline`);
+                outline.style.display = 'block';
+                outline.style.animationDuration = `${growthTimes[item]}s`;
+                
+                // Start Progress Bar
+                let progressBar = document.getElementById(`${item}Progress`);
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                }, 100);
+                
+                growthTimers[item] = setTimeout(() => {
+                    coins += reward * coinMultiplier;
+                    coinSound.play();
+                    updateCoins();
+                    alertInGame(`${capitalize(item)} collected! +${reward * coinMultiplier} coins`);
+                    growthTimers[item] = null;
+                    outline.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    checkAchievements(item);
+                    checkQuests(item);
+                }, growthTimes[item] * 1000);
+            }
+        }
+        
+        // Buy Upgrades
+        function buyFertilizer() {
+            if (coins >= 50) {
+                coins -= 50;
+                growthTimes.wheat = Math.max(1, growthTimes.wheat - 1);
+                growthTimes.chicken = Math.max(5, growthTimes.chicken - 1);
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Fertilizer purchased! 🌱 Wheat and Chicken growth times decreased by 1s.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyTractor() {
+            if (coins >= 150) {
+                coins -= 150;
+                growthTimes.corn = Math.max(4, growthTimes.corn - 2);
+                growthTimes.cow = Math.max(10, growthTimes.cow - 2);
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Tractor purchased! 🚜 Corn and Cow production times decreased by 2s.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyBarn() {
+            if (coins >= 300) {
+                coins -= 300;
+                // Implement barn functionality (e.g., increase animal capacity)
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Barn purchased! 🏠 You can now keep more animals!');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyGreenhouse() {
+            if (coins >= 500) {
+                coins -= 500;
+                growthTimes.pumpkin = Math.max(6, growthTimes.pumpkin - 3);
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Greenhouse purchased! 🌿 Pumpkin growth time decreased by 3s.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyIrrigation() {
+            if (coins >= 800) {
+                coins -= 800;
+                growthTimes.wheat = Math.max(1, growthTimes.wheat - 2);
+                growthTimes.corn = Math.max(2, growthTimes.corn - 2);
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Irrigation System purchased! 💦 Wheat and Corn growth times decreased by 2s.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyWindmill() {
+            if (coins >= 1000) {
+                coins -= 1000;
+                growthTimes.sheep = Math.max(10, growthTimes.sheep - 5);
+                growthTimes.goat = Math.max(10, growthTimes.goat - 5);
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Windmill purchased! 🌬️ Sheep and Goat production times decreased by 5s.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        function buyMarket() {
+            if (coins >= 2000) {
+                coins -= 2000;
+                coinMultiplier += 0.1; // Increase coin rewards by 10%
+                updateCoins();
+                upgradeSound.play();
+                alertInGame('Market purchased! 💼 Coin rewards increased by 10%.');
+            } else {
+                alertInGame('Not enough coins!');
+            }
+        }
+        
+        // Update Coins Display
+        function updateCoins() {
+            document.getElementById('coins').innerText = coins;
+        }
+        
+        // Update Gems Display
+        function updateGems() {
+            document.getElementById('gems').innerText = gems;
+        }
+        
+        // In-Game Notifications
+        function alertInGame(message) {
+            if (activeNotifications >= maxNotifications) return;
+            activeNotifications++;
+            let notification = document.createElement('div');
+            notification.innerText = message;
+            notification.style.padding = '10px 20px';
+            notification.style.marginTop = '10px';
+            notification.style.backgroundColor = '#ffcc00';
+            notification.style.border = '2px solid #333';
+            notification.style.borderRadius = '5px';
+            notification.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.5s';
+            document.getElementById('notification-container').appendChild(notification);
+            setTimeout(() => {
+                notification.style.opacity = '1';
+            }, 100);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                    activeNotifications--;
+                }, 500);
+            }, 3000);
+        }
+        
+        // Save Game State
+        function saveGame() {
+            const gameState = {
+                coins,
+                gems,
+                growthTimes,
+                prestigeCount,
+                coinMultiplier,
+                achievements,
+                completedQuests
+            };
+            localStorage.setItem('idleFarmGameState', JSON.stringify(gameState));
+        }
+        
+        // Load Game State
+        function loadGame() {
+            const savedState = JSON.parse(localStorage.getItem('idleFarmGameState'));
+            if (savedState) {
+                coins = savedState.coins || 0;
+                gems = savedState.gems || 0;
+                growthTimes = savedState.growthTimes || growthTimes;
+                prestigeCount = savedState.prestigeCount || 0;
+                coinMultiplier = savedState.coinMultiplier || 1;
+                achievements = savedState.achievements || {};
+                completedQuests = savedState.completedQuests || [];
+                updateCoins();
+                updateGems();
+            }
+        }
+        
+        // Prestige System
+        function prestige() {
+            if (coins >= 1000) {
+                coins -= 1000;
+                prestigeCount += 1;
+                coinMultiplier += 0.5; // Increase multiplier
+                updateCoins();
+                prestigeSound.play();
+                alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
+                saveGame();
+            } else {
+                alertInGame('Not enough coins to prestige!');
+            }
+        }
+        
+        // Achievements System
+        function generateAchievements() {
+            const achievementList = [
+                { id: 'ach1', description: 'Harvest 10 Wheat', goal: 10, type: 'crop', item: 'wheat' },
+                { id: 'ach2', description: 'Harvest 50 Corn', goal: 50, type: 'crop', item: 'corn' },
+                { id: 'ach3', description: 'Collect 1000 Coins', goal: 1000, type: 'coins', item: null },
+                { id: 'ach4', description: 'Raise 20 Chickens', goal: 20, type: 'animal', item: 'chicken' },
+                { id: 'ach5', description: 'Unlock Market Upgrade', goal: 'market', type: 'upgrade', item: 'market' }
+            ];
+            achievementList.forEach(ach => {
+                if (!achievements[ach.id]) {
+                    achievements[ach.id] = { ...ach, achieved: false };
+                }
+            });
+        }
+        
+        function checkAchievements(item) {
+            for (let key in achievements) {
+                let ach = achievements[key];
+                if (!ach.achieved) {
+                    if (ach.type === 'crop' && ach.item === item) {
+                        if (!ach.count) ach.count = 0;
+                        ach.count += 1;
+                        if (ach.count >= ach.goal) {
+                            ach.achieved = true;
+                            gems += 10;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +10 Gems!`);
+                        }
+                    }
+                    if (ach.type === 'animal' && ach.item === item) {
+                        if (!ach.count) ach.count = 0;
+                        ach.count += 1;
+                        if (ach.count >= ach.goal) {
+                            ach.achieved = true;
+                            gems += 20;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +20 Gems!`);
+                        }
+                    }
+                    if (ach.type === 'coins' && ach.item === null) {
+                        if (coins >= ach.goal) {
+                            ach.achieved = true;
+                            gems += 50;
+                            achievementSound.play();
+                            alertInGame(`Achievement Unlocked: ${ach.description} +50 Gems!`);
+                        }
+                    }
+                    if (ach.type === 'upgrade' && ach.item === item) {
+                        if (ach.goal === 'market') {
+                            // Check if market is purchased
+                            if (coinMultiplier > 1) { // Assuming market increases multiplier
+                                ach.achieved = true;
+                                gems += 100;
+                                achievementSound.play();
+                                alertInGame(`Achievement Unlocked: ${ach.description} +100 Gems!`);
+                            }
+                        }
+                    }
+                }
+            }
+            renderAchievements();
+            updateGems();
+        }
+        
+        function renderAchievements() {
+            const container = document.getElementById('achievements-container');
+            container.innerHTML = '';
+            for (let key in achievements) {
+                let ach = achievements[key];
+                let achDiv = document.createElement('div');
+                achDiv.classList.add('achievement');
+                achDiv.innerHTML = `<h4>${ach.achieved ? '✅' : '🔄'} ${ach.description}</h4>`;
+                container.appendChild(achDiv);
+            }
+        }
+        
+        // Quests System
+        function generateQuests() {
+            const questList = [
+                { id: 'quest1', description: 'Harvest 20 Wheat', goal: 20, type: 'crop', item: 'wheat', reward: 100 },
+                { id: 'quest2', description: 'Collect 500 Coins', goal: 500, type: 'coins', item: null, reward: 50 },
+                { id: 'quest3', description: 'Buy 2 Upgrades', goal: 2, type: 'upgrade', item: null, reward: 150 }
+            ];
+            quests = questList.filter(q => !completedQuests.includes(q.id));
+        }
+        
+        function checkQuests(item) {
+            quests.forEach(quest => {
+                if (!quest.completed) {
+                    if (quest.type === 'crop' && quest.item === item) {
+                        if (!quest.count) quest.count = 0;
+                        quest.count += 1;
+                        if (quest.count >= quest.goal) {
+                            quest.completed = true;
+                            coins += quest.reward;
+                            alertInGame(`Quest Completed: ${quest.description} +${quest.reward} coins!`);
+                            completedQuests.push(quest.id);
+                            generateQuests();
+                            renderQuests();
+                            updateCoins();
+                        }
+                    }
+                    if (quest.type === 'coins') {
+                        if (coins >= quest.goal) {
+                            quest.completed = true;
+                            coins += quest.reward;
+                            alertInGame(`Quest Completed: ${quest.description} +${quest.reward} coins!`);
+                            completedQuests.push(quest.id);
+                            generateQuests();
+                            renderQuests();
+                            updateCoins();
+                        }
+                    }
+                    if (quest.type === 'upgrade') {
+                        // Assuming any upgrade counts
+                        // Implement upgrade counting if necessary
+                    }
+                }
+            });
+        }
+        
+        function renderQuests() {
+            const container = document.getElementById('quests-container');
+            container.innerHTML = '';
+            quests.forEach(quest => {
+                if (!quest.completed) {
+                    let questDiv = document.createElement('div');
+                    questDiv.classList.add('quest');
+                    questDiv.innerHTML = `<h4>${quest.description}</h4><p>Reward: ${quest.reward} coins</p>`;
+                    container.appendChild(questDiv);
+                }
+            });
+        }
+        
+        // Prestige Functionality
+        function prestige() {
+            if (coins >= 1000) {
+                coins -= 1000;
+                prestigeCount += 1;
+                coinMultiplier += 0.5; // Increase multiplier
+                updateCoins();
+                prestigeSound.play();
+                alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
+                saveGame();
+            } else {
+                alertInGame('Not enough coins to prestige!');
+            }
+        }
+        
+        // Capitalize Function
+        function capitalize(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+</html>
