@@ -13,7 +13,7 @@
             color: #000;
             margin: 0;
             padding: 0;
-            transition: background 0.5s;
+            transition: background 0.5s, color 0.5s;
         }
         h1 {
             margin-top: 20px;
@@ -224,16 +224,32 @@
         body.dark-mode #theme-toggle {
             background-color: #1abc9c;
         }
+        /* Auto-Save Notification */
+        #auto-save-notification {
+            position: fixed;
+            bottom: 140px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            display: none;
+            z-index: 1001;
+            transition: opacity 0.5s;
+        }
     </style>
 </head>
 <body>
     <h1>Idle Farm Simulator 🌾</h1>
     <p>Made by <a href="https://sites.google.com/view/staticquasar931" style="color: #ff8800">Static</a></p>
+    <button onclick="window.location.href='https://sites.google.com/view/staticquasar931/static-gmes/statics-idle-farm-sim'" style="margin-top: 10px; padding: 10px 20px; font-size: 1em; cursor: pointer;">Play Game</button>
     
     <div class="farm">
         <!-- Currencies Display -->
         <div class="section">
             <p>Coins: <span id="coins">0</span> 💰 | Gems: <span id="gems">0</span> 💎</p>
+            <p id="auto-save-advertisement" style="font-size: 0.9em; color: #555;">Game progress is automatically saved! 🛡️</p>
         </div>
         
         <!-- Crops Section -->
@@ -466,6 +482,9 @@
     <!-- Notification Container -->
     <div id="notification-container"></div>
     
+    <!-- Auto-Save Notification -->
+    <div id="auto-save-notification">Game has been auto-saved! ✅</div>
+    
     <!-- Audio Elements -->
     <audio id="coinSound" src="https://www.soundjay.com/button/sounds/button-16.mp3" preload="auto"></audio>
     <audio id="achievementSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
@@ -544,6 +563,7 @@
             checkDailyBonus();
             startPassiveIncome();
             updateTheme();
+            showAutoSaveNotification();
         };
         
         window.onbeforeunload = saveGame;
@@ -585,6 +605,7 @@
                 alertInGame('Passive Wheat Farm purchased! 💰 Generates 5 coins every 10s.');
                 startPassiveIncomeItem(id, 10, 5);
                 updateCoins();
+                checkAchievements(null); // For passive farm achievements
             } else {
                 alertInGame('Not enough coins or already owned!');
             }
@@ -598,6 +619,7 @@
                 alertInGame('Passive Chicken Coop purchased! 💰 Generates 15 coins every 20s.');
                 startPassiveIncomeItem(id, 20, 15);
                 updateCoins();
+                checkAchievements(null); // For passive farm achievements
             } else {
                 alertInGame('Not enough coins or already owned!');
             }
@@ -635,6 +657,7 @@
                 upgradeSound.play();
                 alertInGame('Fertilizer purchased! 🌱 Wheat and Chicken growth times decreased by 1s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -648,6 +671,7 @@
                 upgradeSound.play();
                 alertInGame('Tractor purchased! 🚜 Corn and Cow production times decreased by 2s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -660,6 +684,7 @@
                 upgradeSound.play();
                 alertInGame('Barn purchased! 🏠 You can now keep more animals!');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -672,6 +697,7 @@
                 upgradeSound.play();
                 alertInGame('Greenhouse purchased! 🌿 Pumpkin growth time decreased by 3s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -685,6 +711,7 @@
                 upgradeSound.play();
                 alertInGame('Irrigation System purchased! 💦 Wheat and Corn growth times decreased by 2s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -698,6 +725,7 @@
                 upgradeSound.play();
                 alertInGame('Windmill purchased! 🌬️ Sheep and Goat production times decreased by 5s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -710,7 +738,7 @@
                 upgradeSound.play();
                 alertInGame('Market purchased! 💼 Coin rewards increased by 10%.');
                 updateCoins();
-                checkAchievements('market');
+                checkAchievements('market'); // For market-related achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -724,6 +752,7 @@
                 upgradeSound.play();
                 alertInGame('Advanced Tractor purchased! 🚜 Corn and Cow production times decreased by 3s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -737,6 +766,7 @@
                 upgradeSound.play();
                 alertInGame('Super Windmill purchased! 🌬️ Sheep and Goat production times decreased by 5s.');
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -749,6 +779,7 @@
                 decorationSound.play();
                 alertInGame(`${capitalize(decoration)} decoration added to your farm! 🎉`);
                 updateCoins();
+                checkAchievements(null); // For any relevant achievements
             } else {
                 alertInGame('Not enough coins!');
             }
@@ -767,7 +798,7 @@
         // Update Prestige Display
         function updatePrestige() {
             document.getElementById('prestigeCount').innerText = prestigeCount;
-            document.getElementById('coinMultiplier').innerText = coinMultiplier;
+            document.getElementById('coinMultiplier').innerText = coinMultiplier.toFixed(1);
         }
         
         // In-Game Notifications
@@ -851,7 +882,7 @@
                 updatePrestige();
                 prestigeSound.play();
                 alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
-                // Reset game except for prestige and multiplier
+                checkAchievements(null); // For prestige-related achievements
                 resetGame(false);
             } else {
                 alertInGame('Not enough coins to prestige!');
@@ -1030,11 +1061,10 @@
                         // Assuming any upgrade counts
                         // Implement upgrade counting if necessary
                         // For simplicity, count as completed once any upgrade is bought
-                        if (coins < quest.reward + 150) { // Example condition
-                            quest.count = (quest.count || 0) + 1;
-                            if (quest.count >= quest.goal) {
-                                completeQuest(quest);
-                            }
+                        // Here we count any upgrade purchase
+                        quest.count = (quest.count || 0) + 1;
+                        if (quest.count >= quest.goal) {
+                            completeQuest(quest);
                         }
                     }
                     if (quest.type === 'passive' && quest.item === null) {
@@ -1080,8 +1110,8 @@
                 updatePrestige();
                 prestigeSound.play();
                 alertInGame('Prestige achieved! ✨ Coin rewards increased by 50%.');
-                checkAchievements(null); // For prestige achievements
-                resetGame(true);
+                checkAchievements(null); // For prestige-related achievements
+                resetGame(true); // Complete reset
             } else {
                 alertInGame('Not enough coins to prestige!');
             }
@@ -1099,7 +1129,7 @@
             focusMode = !focusMode;
             const farmSections = document.querySelectorAll('.section');
             farmSections.forEach(section => {
-                if (!['Crops 🌱', 'Animals 🐄', 'Upgrades 🚜', 'Prestige ✨'].includes(section.querySelector('h2')?.innerText)) {
+                if (!['Crops 🌱', 'Animals 🐄', 'Upgrades 🚜', 'Passive Farms 🌾', 'Decorations 🎨', 'Quests 🎯', 'Achievements 🏆', 'Prestige ✨'].includes(section.querySelector('h2')?.innerText)) {
                     section.style.display = focusMode ? 'none' : 'block';
                 }
             });
@@ -1186,17 +1216,40 @@
                 case 'u':
                     document.querySelector('.section:nth-of-type(4)').scrollIntoView();
                     break;
-                case 'q':
+                case 'p':
                     document.querySelector('.section:nth-of-type(6)').scrollIntoView();
                     break;
-                case 'p':
+                case 'd':
+                    document.querySelector('.section:nth-of-type(5)').scrollIntoView();
+                    break;
+                case 'q':
                     document.querySelector('.section:nth-of-type(7)').scrollIntoView();
                     break;
                 default:
                     break;
             }
         });
+        
+        // Auto-Save Functionality and Notification
+        function showAutoSaveNotification() {
+            setInterval(() => {
+                saveGame();
+                const notification = document.getElementById('auto-save-notification');
+                notification.style.display = 'block';
+                notification.style.opacity = '1';
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 500);
+                }, 2000);
+            }, 60000); // Auto-save every 60 seconds
+        }
+        
+        // Hidden Credits (Obfuscated)
+        // C-r-e-a-t-e-d b-y: s-t-a-t-i-c
+        // W-e-b-s-i-t-e: s-i-t-e-s.-g-o-o-g-l-e.-c-o-m/-v-i-e-w/s-t-a-t-i-c-q-u-a-s-a-r931
+        // s-t-a-t-i-c-g-a-m-e
     </script>
 </body>
 </html>
-
